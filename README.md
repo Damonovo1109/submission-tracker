@@ -45,3 +45,4 @@ GitHub Pages 提供在线访问，GitHub Releases 提供按版本下载。
 4. 将 `submission-tracker-v1.0.0.zip` 上传到 Release 附件。确认 ZIP 只包含通用版软件与说明，再发布。
 
 参考：[GitHub Releases 发布指南](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)。
+希望大家多多交流，多多投稿,多接accept!如果这个小工具对你有所帮助，欢迎自愿捐赠，以支持后续维护与改进。捐赠完全自愿，不会影响软件的使用；你的使用、反馈或分享同样是对项目很好的支持If you find this little tool useful, you’re welcome to support its continued development with a small, optional donation. There’s absolutely no obligation—using and sharing the project is already appreciated. Alipay：damonovo@163.com
