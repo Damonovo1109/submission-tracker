@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>投稿台账 · Submission Tracker</title>
+  <style>
+    :root { color-scheme:light; --bg:#f5f6ef; --paper:#fff; --ink:#19352f; --muted:#506660; --line:#d9e1d8; --green:#12634f; --soft:#e9f4ec; --red:#8c3329; font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--bg); }
+    main { width:min(1120px,calc(100% - 36px)); margin:auto; padding:50px 0 56px; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:clamp(32px,5vw,53px); line-height:1.15; letter-spacing:-.05em; }
+    h2 { font-size:22px; letter-spacing:-.02em; }
+    h3 { font-size:17px; line-height:1.25; }
+    a { color:var(--green); text-decoration:none; }
+    a:hover { text-decoration:underline; }
+    button,input,textarea { font:inherit; }
+    button,a.button { border:1px solid var(--line); border-radius:7px; padding:8px 12px; background:#fff; color:var(--ink); cursor:pointer; font-size:13px; white-space:nowrap; }
+    button:hover,a.button:hover { border-color:var(--green); text-decoration:none; }
+    .primary { background:var(--green); color:#fff; border-color:var(--green); }
+    a.primary { background:var(--green); color:#fff; border-color:var(--green); }
+    button.danger { color:var(--red); }
+    :focus-visible { outline:3px solid #27866d; outline-offset:2px; }
+    .intro { margin-top:10px; max-width:620px; color:var(--muted); line-height:1.65; font-size:14px; }
+    .section { margin-top:30px; }
+    .bar { display:flex; align-items:center; justify-content:space-between; gap:11px; flex-wrap:wrap; margin-bottom:12px; }
+    .actions { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
+    .portals { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .portal { display:flex; min-width:0; flex-direction:column; gap:14px; justify-content:space-between; padding:17px; background:var(--paper); border:1px solid var(--line); border-radius:10px; }
+    .portal p,.small { margin-top:5px; font-size:12px; line-height:1.45; color:var(--muted); }
+    .portal h3,.entry-title { overflow-wrap:anywhere; }
+    .grid { display:grid; grid-template-columns:2fr minmax(145px,.8fr) minmax(112px,.55fr) auto; gap:14px; align-items:center; }
+    .record { padding:15px 17px; background:var(--paper); border:1px solid var(--line); border-radius:9px; margin-bottom:8px; font-size:13px; }
+    .entry-title { font-size:14px; font-weight:650; line-height:1.45; }
+    .status { display:inline-block; max-width:100%; padding:4px 7px; border-radius:4px; background:var(--soft); color:#174e40; overflow-wrap:anywhere; }
+    .label { font-size:11px; color:var(--muted); margin-bottom:4px; }
+    .empty { padding:20px; background:#fff; border:1px dashed var(--line); border-radius:9px; color:var(--muted); }
+    .toolbar { margin-top:10px; display:flex; align-items:center; gap:8px 12px; flex-wrap:wrap; }
+    #feedback { font-size:12px; line-height:1.5; color:var(--muted); }
+    #feedback.error { color:var(--red); }
+    dialog { width:min(590px,calc(100% - 26px)); border:1px solid var(--line); border-radius:12px; padding:23px; color:var(--ink); }
+    dialog::backdrop { background:#192d2690; }
+    .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:16px 0; }
+    .field { display:grid; gap:5px; font-size:13px; min-width:0; }
+    .full { grid-column:1 / -1; }
+    input,textarea { width:100%; min-width:0; border:1px solid var(--line); color:var(--ink); padding:8px 9px; border-radius:6px; }
+    textarea { resize:vertical; min-height:57px; }
+    .form-error { min-height:20px; font-size:12px; color:var(--red); }
+    .header-bar { align-items:flex-end; }
+    .profile-label { color:var(--muted); font-size:13px; }
+    [hidden] { display:none !important; }
+    .dialog-copy { color:var(--muted); line-height:1.7; font-size:14px; margin:12px 0; }
+    #authStatus { min-height:20px; margin:6px 0; }
+    @media (max-width:890px) { .portals { grid-template-columns:repeat(2,minmax(0,1fr)); } .grid { grid-template-columns:1fr 1fr; } }
+    @media (max-width:520px) { main{padding-top:32px} .portals,.grid,.fields { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="bar header-bar"><h1>投稿进度台账</h1><div class="actions"><span id="profileLabel" class="profile-label">访客台账</span><button id="openLogin" type="button">Google 账号登录</button><button id="signOut" type="button" hidden>退出登录</button></div></div>
+    <p class="intro">从这里打开各期刊的作者后台。查到最新进度后，可以把状态和稿件链接记在下方。</p>
+  </header>
+  <section class="section" aria-labelledby="portalsTitle">
+    <div class="bar"><h2 id="portalsTitle">投稿入口</h2><button id="addPortal" type="button">新增入口</button></div>
+    <div class="portals" id="portals"></div>
+  </section>
+  <section class="section" aria-labelledby="recordsTitle">
+    <div class="bar">
+      <h2 id="recordsTitle">稿件记录</h2>
+      <button class="primary" type="button" id="addRecord">新增稿件</button>
+    </div>
+    <div id="records"></div>
+    <div class="toolbar">
+      <button type="button" id="exportRecords">导出备份</button>
+      <button type="button" id="importRecords">导入备份</button>
+      <input id="backupFile" type="file" accept=".json,application/json" hidden>
+      <span id="feedback" role="status">状态手动更新。记录保存在当前浏览器。</span>
+    </div>
+  </section>
+</main>
+<dialog id="recordDialog" aria-labelledby="formTitle">
+  <form id="recordForm">
+    <h2 id="formTitle">新增稿件</h2>
+    <div class="fields">
+      <label class="field full">稿件题目<input name="title" required maxlength="280"></label>
+      <label class="field">期刊或出版社<input name="journal" list="journalList" required maxlength="140"></label>
+      <label class="field">稿件编号<input name="number" maxlength="90"></label>
+      <label class="field">最新状态<input name="status" list="statusList" maxlength="100"></label>
+      <label class="field">状态日期<input name="date" type="date"></label>
+      <label class="field full">稿件专属链接<input name="url" type="url" placeholder="粘贴浏览器里的 https:// 地址" maxlength="4096"></label>
+      <label class="field full">备注<textarea name="note" maxlength="480"></textarea></label>
+    </div>
+    <p id="formError" class="form-error" role="alert"></p>
+    <div class="actions">
+      <button type="submit" class="primary">保存</button>
+      <button type="button" id="cancelRecord">取消</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="loginDialog" aria-labelledby="loginTitle">
+  <h2 id="loginTitle">使用 Google 账号登录</h2>
+  <p class="dialog-copy">登录后可切换到该账号在当前浏览器的独立台账。跨设备使用时，请通过备份导入记录。</p>
+  <p id="authStatus" class="form-error" role="status"></p>
+  <div class="actions">
+    <button id="googleSignIn" class="primary" type="button" disabled>继续使用 Google</button>
+    <button id="closeLogin" type="button">关闭</button>
+  </div>
+</dialog>
+<dialog id="portalDialog" aria-labelledby="portalFormTitle">
+  <form id="portalForm">
+    <h2 id="portalFormTitle">新增投稿入口</h2>
+    <div class="fields">
+      <label class="field full">期刊或出版社名称<input name="name" required maxlength="140"></label>
+      <label class="field full">投稿后台<input name="author" type="url" required maxlength="4096" placeholder="https://"></label>
+      <label class="field full">期刊官网<input name="site" type="url" maxlength="4096" placeholder="https://"></label>
+      <label class="field full">平台说明<input name="platform" maxlength="140"></label>
+    </div>
+    <p id="portalError" class="form-error" role="alert"></p>
+    <div class="actions">
+      <button class="primary" type="submit">保存</button>
+      <button id="cancelPortal" type="button">取消</button>
+      <button id="deletePortal" class="danger" type="button" hidden>删除入口</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="journalList"></datalist>
+<datalist id="statusList">
+  <option value="Submitted"></option><option value="Technical Check"></option><option value="With Editor"></option>
+  <option value="Under Review"></option><option value="Pending Editor Decision"></option><option value="Revision Requested"></option>
+  <option value="Accepted"></option><option value="Rejected"></option><option value="Withdrawn"></option>
+</datalist>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+<script src="auth.js"></script>
+</body>
+</html>
